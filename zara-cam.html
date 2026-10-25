@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="si">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="theme-color" content="#7a1f4b">
+<title>Zara Cam</title>
+<style>
+:root{--p:#7a1f4b;--p2:#a8326a;--bg:#f6f1f4;--tx:#241a20;--mut:#7b6a73;--line:#eadfe5}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:system-ui,"Noto Sans Sinhala","Iskoola Pota",sans-serif;background:var(--bg);color:var(--tx);padding-bottom:30px}
+header{background:linear-gradient(135deg,var(--p),var(--p2));color:#fff;padding:12px 16px;font-size:18px;font-weight:700}
+header small{display:block;font-weight:400;font-size:12px;opacity:.85}
+main{padding:12px}
+.card{background:#fff;border-radius:14px;padding:12px;box-shadow:0 1px 3px rgba(0,0,0,.07);margin-bottom:10px}
+.btn{border:0;border-radius:12px;padding:14px;font-size:16px;background:var(--p);color:#fff;width:100%;font-family:inherit}
+.btn.sec{background:#efe4ea;color:var(--p)}
+.btn[disabled]{opacity:.5}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#stage{position:relative;background:#222;border-radius:12px;overflow:hidden;min-height:120px;display:flex;align-items:center;justify-content:center}
+#view{width:100%;height:auto;display:block}
+#ph{color:#bbb;padding:40px 20px;text-align:center;font-size:14px}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.chips button{flex:0 0 auto;border:1px solid #d9cbd3;background:#fff;border-radius:20px;padding:8px 14px;font-size:14px;font-family:inherit}
+.chips button.on{background:var(--p);color:#fff;border-color:var(--p)}
+.sl{margin-top:10px}
+.sl label{display:flex;justify-content:space-between;font-size:13px;color:var(--mut)}
+.sl input{width:100%;accent-color:var(--p)}
+h3{margin:0 0 6px;font-size:15px;color:var(--p)}
+.s{font-size:12.5px;color:var(--mut);line-height:1.7}
+#msg{font-size:13px;color:var(--p);min-height:18px;margin-top:6px;text-align:center}
+</style>
+</head>
+<body>
+<header>📷 Zara Cam<small>සාරි photo එක ගත්තට පස්සේ catalog quality එකට හරවයි</small></header>
+<main>
+  <div class="two">
+    <button class="btn" onclick="$('f_cam').click()">📷 Photo එකක් ගන්න</button>
+    <button class="btn sec" onclick="$('f_gal').click()">🖼️ Gallery එකෙන්</button>
+  </div>
+  <input type="file" id="f_cam" accept="image/*" capture="environment" style="display:none" onchange="pickFile(this)">
+  <input type="file" id="f_gal" accept="image/*" style="display:none" onchange="pickFile(this)">
+  <div id="msg"></div>
+
+  <div class="card" style="margin-top:10px;padding:8px">
+    <div id="stage"><div id="ph">Photo එකක් ගන්න හෝ Gallery එකෙන් තෝරන්න.<br>සාරිය <b>දිවා ආලෝකයේ</b>, සුදු/අළු පසුබිමක් ඉදිරිපිට තබා ගන්න.</div><canvas id="view" style="display:none" onclick="tapWhite(event)"></canvas></div>
+    <div class="two" style="margin-top:8px">
+      <button class="btn sec" id="b_cmp" disabled style="padding:10px;font-size:14px">👁️ මුල් එක බලන්න (ඔබාගෙන සිටින්න)</button>
+      <button class="btn sec" id="b_wb" disabled style="padding:10px;font-size:14px" onclick="armWhite()">⚪ සුදු තැනක් තෝරන්න</button>
+    </div>
+    <div class="s" id="wbinfo" style="margin-top:4px"></div>
+  </div>
+
+  <div class="card">
+    <h3>වර්ග (Presets)</h3>
+    <div class="chips" id="presets">
+      <button data-k="nat" class="on">ස්වභාවික</button><button data-k="vivid">වර්ණවත්</button><button data-k="cat">Catalog (දීප්ත)</button><button data-k="soft">මෘදු</button>
+    </div>
+    <div id="sliders"></div>
+    <button class="btn sec" style="margin-top:12px;padding:10px;font-size:14px" onclick="resetP()">⟲ Auto වෙත ආපසු</button>
+  </div>
+
+  <button class="btn" id="b_save" disabled onclick="savePhoto()">💾 Save / Share කරන්න</button>
+
+  <div class="card" style="margin-top:12px">
+    <h3>හොඳ photo එකක් ගන්න ඉඟි</h3>
+    <div class="s">
+      • <b>ආලෝකය</b> තමයි වැඩිම වෙනස කරන්නේ: ජනේලයක් ළඟ දිවා ආලෝකයේ, flash නැතුව. බල්බ එළියේ වර්ණ වෙනස් වෙනවා.<br>
+      • සුදු හෝ ලා අළු පසුබිමක් (රෙද්දක්/බිත්තියක්) පාවිච්චි කරන්න; එතකොට වර්ණ නිවැරදිව ගන්න පුළුවන්.<br>
+      • Phone එක <b>අධික ලෙස ස්ථිරව</b> තබන්න (උස පොත් ගොඩක් හෝ ලාභ tripod එකක්). අත සෙලවීමෙන් තමයි කැපෙන තියුණුකම නැති වෙන්නේ.<br>
+      • Lens එක <b>සුදු රෙද්දකින් පිස දමන්න</b> (ඇඟිලි මල නිසා photo අඳුරු/මීදුම් වෙනවා).<br>
+      • පිටුපස camera එක පාවිච්චි කරන්න, zoom කරන්න එපා (ළඟට ගිහින් ගන්න).
+    </div>
+  </div>
+</main>
+
+<script>
+const $=id=>document.getElementById(id);
+const FULL_MAX=3200,PREV_MAX=1100;
+const DEF={exp:0,con:.12,sha:.2,sat:.12,cla:.2,shp:.45,dn:.35,warm:0,wb:1};
+const PRESETS={
+  nat:{...DEF},
+  vivid:{...DEF,con:.2,sat:.32,cla:.3,shp:.55},
+  cat:{...DEF,exp:.45,con:.15,sha:.45,sat:.18,cla:.25,shp:.5,dn:.4},
+  soft:{...DEF,con:.06,sat:.08,cla:.08,shp:.3,dn:.5}
+};
+const SL=[['exp','දීප්තිය',-1,1,.05],['con','Contrast',0,.4,.01],['sha','අඳුරු තැන් දීප්ත කිරීම',0,1,.05],['sat','වර්ණ තීව්‍රතාව',0,.6,.02],['cla','විස්තර / රෙදි වයනය',0,.6,.02],['shp','තියුණුකම',0,1,.05],['dn','Noise අඩු කිරීම',0,1,.05],['warm','උණුසුම (−සීතල / +උණුසුම්)',-1,1,.05],['wb','ස්වයංක්‍රීය වර්ණ සමතුලිතතාව',0,1,.05]];
+let P={...DEF},ref=null,full=null,prev=null,armed=false,showOrig=false,raf=0;
+
+function buildSliders(){
+  $('sliders').innerHTML=SL.map(([k,l,mn,mx,st])=>`<div class="sl"><label><span>${l}</span><b id="v_${k}">${(+P[k]).toFixed(2)}</b></label><input type="range" id="s_${k}" min="${mn}" max="${mx}" step="${st}" value="${P[k]}" oninput="setP('${k}',+this.value)"></div>`).join('');
+}
+function setP(k,v){P[k]=v;$('v_'+k).textContent=v.toFixed(2);sched()}
+function resetP(){P={...PRESETS[curPreset]};ref=null;$('wbinfo').textContent='';buildSliders();sched()}
+let curPreset='nat';
+document.querySelectorAll('#presets button').forEach(b=>b.onclick=()=>{
+  curPreset=b.dataset.k;document.querySelectorAll('#presets button').forEach(x=>x.classList.toggle('on',x===b));
+  P={...PRESETS[curPreset]};buildSliders();sched();
+});
+
+/* ---------- රූපය පූරණය ---------- */
+async function pickFile(inp){
+  const f=inp.files&&inp.files[0];if(!f)return;
+  $('msg').textContent='Photo එක සකසමින්...';
+  try{
+    let bmp;
+    try{bmp=await createImageBitmap(f,{imageOrientation:'from-image'})}
+    catch(e){bmp=await new Promise((res,rej)=>{const im=new Image();im.onload=()=>res(im);im.onerror=rej;im.src=URL.createObjectURL(f)})}
+    const bw=bmp.width,bh=bmp.height;
+    full=toData(bmp,bw,bh,FULL_MAX);
+    prev=toData(bmp,bw,bh,PREV_MAX);
+    if(bmp.close)bmp.close();
+    ref=null;$('wbinfo').textContent='';
+    $('ph').style.display='none';$('view').style.display='block';
+    ['b_cmp','b_wb','b_save'].forEach(i=>$(i).disabled=false);
+    $('msg').textContent='';
+    renderPrev();
+  }catch(e){$('msg').textContent='Photo එක කියවීමට නොහැකි විය';console.error(e)}
+  inp.value='';
+}
+function toData(src,w,h,max){
+  const sc=Math.min(1,max/Math.max(w,h));const cw=Math.max(1,Math.round(w*sc)),ch=Math.max(1,Math.round(h*sc));
+  const c=document.createElement('canvas');c.width=cw;c.height=ch;const x=c.getContext('2d',{willReadFrequently:true});
+  x.imageSmoothingQuality='high';x.drawImage(src,0,0,cw,ch);
+  return x.getImageData(0,0,cw,ch);
+}
+
+/* ---------- Enhance pipeline ---------- */
+function boxBlur(src,w,h,r){
+  const n=src.length,tmp=new Float32Array(n),out=new Float32Array(n),dd=2*r+1;
+  for(let y=0;y<h;y++){
+    const o=y*w;let acc=0;
+    for(let k=-r;k<=r;k++)acc+=src[o+Math.min(w-1,Math.max(0,k))];
+    for(let x=0;x<w;x++){
+      tmp[o+x]=acc/dd;
+      acc+=src[o+Math.min(w-1,x+r+1)]-src[o+Math.max(0,x-r)];
+    }
+  }
+  for(let x=0;x<w;x++){
+    let acc=0;
+    for(let k=-r;k<=r;k++)acc+=tmp[Math.min(h-1,Math.max(0,k))*w+x];
+    for(let y=0;y<h;y++){
+      out[y*w+x]=acc/dd;
+      acc+=tmp[Math.min(h-1,y+r+1)*w+x]-tmp[Math.max(0,y-r)*w+x];
+    }
+  }
+  return out;
+}
+const blur2=(a,w,h,r)=>boxBlur(boxBlur(a,w,h,r),w,h,r);
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+
+function wbGains(d,w,h,p,r){
+  let gr=1,gg=1,gb=1;
+  if(r){
+    const m=(r[0]+r[1]+r[2])/3;
+    gr=clamp(m/Math.max(r[0],1),.6,1.7);gg=clamp(m/Math.max(r[1],1),.6,1.7);gb=clamp(m/Math.max(r[2],1),.6,1.7);
+  }else if(p.wb>0){
+    const step=Math.max(1,Math.floor(Math.sqrt(w*h/60000)));
+    let sr=0,sg=0,sb=0,c=0,tot=0;
+    for(let y=0;y<h;y+=step)for(let x=0;x<w;x+=step){
+      const i=(y*w+x)*4,R=d[i],G=d[i+1],B=d[i+2],mx=Math.max(R,G,B),mn=Math.min(R,G,B);
+      tot++;if(mx>140&&(mx-mn)<0.3*mx){sr+=R;sg+=G;sb+=B;c++}
+    }
+    if(c>tot*0.01){
+      const ar=sr/c,ag=sg/c,ab=sb/c,m=(ar+ag+ab)/3;
+      gr=clamp(1+(m/ar-1)*p.wb,.8,1.25);gg=clamp(1+(m/ag-1)*p.wb,.8,1.25);gb=clamp(1+(m/ab-1)*p.wb,.8,1.25);
+    }
+  }
+  gr*=1+0.1*p.warm;gb*=1-0.1*p.warm;
+  return [gr,gg,gb];
+}
+
+function enhance(img,p,r){
+  const d=img.data,w=img.width,h=img.height,n=w*h;
+  const [gr,gg,gb]=wbGains(d,w,h,p,r);
+  // histogram (white balance ඇතුව)
+  const hist=new Float64Array(256),step=Math.max(1,Math.floor(Math.sqrt(n/200000)));let cnt=0;
+  for(let y=0;y<h;y+=step)for(let x=0;x<w;x+=step){
+    const i=(y*w+x)*4;
+    const Y=.299*Math.min(255,d[i]*gr)+.587*Math.min(255,d[i+1]*gg)+.114*Math.min(255,d[i+2]*gb);
+    hist[Math.min(255,Y|0)]++;cnt++;
+  }
+  const pct=f=>{let a=0;const t=cnt*f;for(let i=0;i<256;i++){a+=hist[i];if(a>=t)return i}return 255};
+  let low=Math.min(pct(.005),50),high=Math.max(pct(.995),150);if(high-low<60)high=low+60;
+  const medV=pct(.5),medX=clamp((medV-low)/(high-low),.03,.97);
+  let gamma=1;if(medX<.4)gamma=clamp(Math.log(.4)/Math.log(medX),.6,1);
+  gamma*=Math.pow(2,-p.exp*.7);
+  const lut=new Uint8ClampedArray(256);
+  for(let v=0;v<256;v++){
+    let x=clamp((v-low)/(high-low),0,1);
+    x=Math.pow(x,gamma);
+    x+=p.sha*.7*x*(1-x)*(1-x);
+    x+=p.con*4*x*(1-x)*(x-.5);
+    lut[v]=Math.round(clamp(x,0,1)*255);
+  }
+  // YCbCr
+  const Y=new Float32Array(n);let Cb=new Float32Array(n),Cr=new Float32Array(n);
+  for(let k=0,i=0;k<n;k++,i+=4){
+    const R=lut[Math.min(255,(d[i]*gr)|0)],G=lut[Math.min(255,(d[i+1]*gg)|0)],B=lut[Math.min(255,(d[i+2]*gb)|0)];
+    const y=.299*R+.587*G+.114*B;Y[k]=y;Cb[k]=B-y;Cr[k]=R-y;
+  }
+  const sc=Math.max(1,w/1400);
+  // chroma noise අඩු කිරීම
+  const dr=Math.round(p.dn*3*sc);
+  if(dr>=1){Cb=blur2(Cb,w,h,dr);Cr=blur2(Cr,w,h,dr)}
+  // සැහැල්ලු luma denoise
+  let Yc=Y;
+  if(p.dn>0.05){const yb=boxBlur(Y,w,h,1);const m=p.dn*.35;Yc=new Float32Array(n);for(let k=0;k<n;k++)Yc[k]=Y[k]*(1-m)+yb[k]*m}
+  // clarity (විශාල අරයක local contrast)
+  if(p.cla>0){
+    const yb=blur2(Yc,w,h,Math.max(6,Math.round(w/30)));
+    for(let k=0;k<n;k++){const t=Yc[k]/255,wt=1-Math.pow(2*t-1,2)*.7;Yc[k]+=p.cla*(Yc[k]-yb[k])*wt}
+  }
+  // තියුණු කිරීම
+  if(p.shp>0){
+    const ys=blur2(Yc,w,h,Math.max(1,Math.round(w/1500)));const amt=p.shp*1.2;
+    for(let k=0;k<n;k++){let df=Yc[k]-ys[k];const a=Math.abs(df);if(a<1.5)df*=a/1.5;Yc[k]+=df*amt}
+  }
+  // වර්ණ + ප්‍රතිනිර්මාණය
+  for(let k=0,i=0;k<n;k++,i+=4){
+    const y=clamp(Yc[k],0,255);let cb=Cb[k],cr=Cr[k];
+    let R=y+cr,B=y+cb,G=(y-.299*R-.114*B)/.587;
+    const mx=Math.max(R,G,B),mn=Math.min(R,G,B),s=mx>1?(mx-mn)/mx:0;
+    const f=1+p.sat*(1.25-s);
+    cb*=f;cr*=f;R=y+cr;B=y+cb;G=(y-.299*R-.114*B)/.587;
+    d[i]=R<0?0:R>255?255:R;d[i+1]=G<0?0:G>255?255:G;d[i+2]=B<0?0:B>255?255:B;
+  }
+  return img;
+}
+const copyImg=im=>new ImageData(new Uint8ClampedArray(im.data),im.width,im.height);
+
+/* ---------- Preview ---------- */
+function sched(){if(!prev)return;cancelAnimationFrame(raf);raf=requestAnimationFrame(renderPrev)}
+function renderPrev(){
+  if(!prev)return;
+  const c=$('view');c.width=prev.width;c.height=prev.height;
+  const out=showOrig?prev:enhance(copyImg(prev),P,ref);
+  c.getContext('2d').putImageData(out,0,0);
+}
+const cmp=$('b_cmp');
+['pointerdown'].forEach(e=>cmp.addEventListener(e,ev=>{ev.preventDefault();showOrig=true;renderPrev()}));
+['pointerup','pointerleave','pointercancel'].forEach(e=>cmp.addEventListener(e,()=>{if(showOrig){showOrig=false;renderPrev()}}));
+function armWhite(){armed=!armed;$('b_wb').style.background=armed?'#7a1f4b':'';$('b_wb').style.color=armed?'#fff':'';$('msg').textContent=armed?'දැන් photo එකේ සුදු / ලා අළු තැනක් ඔබන්න':''}
+function tapWhite(ev){
+  if(!armed||!prev)return;
+  const c=$('view'),rc=c.getBoundingClientRect();
+  const x=Math.round((ev.clientX-rc.left)/rc.width*prev.width),y=Math.round((ev.clientY-rc.top)/rc.height*prev.height);
+  let sr=0,sg=0,sb=0,n=0;
+  for(let dy=-4;dy<=4;dy++)for(let dx=-4;dx<=4;dx++){
+    const xx=clamp(x+dx,0,prev.width-1),yy=clamp(y+dy,0,prev.height-1),i=(yy*prev.width+xx)*4;
+    sr+=prev.data[i];sg+=prev.data[i+1];sb+=prev.data[i+2];n++;
+  }
+  ref=[sr/n,sg/n,sb/n];armed=false;armWhite();armed=false;$('b_wb').style.background='';$('b_wb').style.color='';
+  $('msg').textContent='';$('wbinfo').textContent='✅ තෝරාගත් තැන සුදු/අළු ලෙස සලකා වර්ණ නිවැරදි කළා. (Auto වෙත ආපසු බොත්තමෙන් අයින් කරන්න)';
+  sched();
+}
+
+/* ---------- Save / Share ---------- */
+async function savePhoto(){
+  if(!full)return;
+  $('msg').textContent='ඉහළ තත්ත්වයෙන් සකසමින්... (තත්පර කිහිපයක්)';
+  await new Promise(r=>setTimeout(r,30));
+  try{
+    const out=enhance(copyImg(full),P,ref);
+    const c=document.createElement('canvas');c.width=out.width;c.height=out.height;c.getContext('2d').putImageData(out,0,0);
+    const blob=await new Promise(r=>c.toBlob(r,'image/jpeg',.95));
+    window.__lastBlob=blob;
+    const name='zara-'+Date.now()+'.jpg';
+    const file=new File([blob],name,{type:'image/jpeg'});
+    const cap=(window.Capacitor&&window.Capacitor.Plugins)||{};
+    if(cap.Filesystem&&cap.Share){
+      const b64=await new Promise(res=>{const fr=new FileReader();fr.onload=()=>res(String(fr.result).split(',')[1]);fr.readAsDataURL(blob)});
+      const w=await cap.Filesystem.writeFile({path:name,data:b64,directory:'CACHE'});
+      await cap.Share.share({title:'Zara Looms photo',files:[w.uri]});
+    }else if(navigator.canShare&&navigator.canShare({files:[file]})){
+      await navigator.share({files:[file],title:'Zara Looms photo'});
+    }else{
+      const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=name;document.body.appendChild(a);a.click();a.remove();
+    }
+    $('msg').textContent='✅ සූදානම් ('+out.width+'×'+out.height+')';
+  }catch(e){
+    if(String(e&&e.message||e).match(/cancel|abort/i)){$('msg').textContent=''}
+    else{$('msg').textContent='Save කිරීමට නොහැකි විය: '+(e&&e.message||e)}
+  }
+}
+buildSliders();
+</script>
+</body>
+</html>
